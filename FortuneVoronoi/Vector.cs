@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Runtime.Serialization;
 using BenTools.Data;
 
 namespace BenTools.Mathematics
@@ -7,18 +8,21 @@ namespace BenTools.Mathematics
 	/// <summary>
 	/// A vector class, implementing all interesting features of vectors
 	/// </summary>
-	public class Vector : IEnumerable, IComparable
-	{
+    [Serializable]
+    public class Vector : IEnumerable, IComparable
+	{    
 		/// <summary>
 		/// Global precision for any calculation
 		/// </summary>
 		public static int Precision = 10;
 		double[] data;
-		public object Tag=null;
 		/// <summary>
 		/// Build a new vector
 		/// </summary>
 		/// <param name="dim">The dimension</param>
+        public Vector()
+        {
+        }
 		public Vector(int dim)
 		{
 			data = new double[dim];
@@ -350,6 +354,40 @@ namespace BenTools.Mathematics
 			}
 			return 0;
 		}
+
+        public double Length()
+        {
+            double sum = 0;
+            for (int i = 0; i < Dim; ++i)
+            {
+                sum += this[i] * this[i];
+            }
+            double length = Math.Sqrt(sum);
+            return length;
+        }
+
+        public Vector Normalize()
+        {
+            Vector norm = this.Clone();
+            double length = norm.Length();
+            for (int i = 0; i < norm.Dim; ++i)
+            {
+                norm[i] /= length;
+            }
+            return norm;
+        }
+
+        public static double DotProduct(Vector data1, Vector data2)
+        {
+            double sum = 0;
+            for (int i = 0; i < data1.Dim; ++i)
+            {
+                sum += data1[i] * data2[i];
+            }
+
+            return sum;
+        }
+        
 		/// <summary>
 		/// Get a copy of one vector
 		/// </summary>
