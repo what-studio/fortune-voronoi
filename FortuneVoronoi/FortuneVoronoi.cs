@@ -1,14 +1,17 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using BenTools.Data;
 
 namespace BenTools.Mathematics
 {
 	public class VoronoiGraph
 	{
-		public HashSet Vertizes = new HashSet();
-		public HashSet Edges = new HashSet();
+		public List<Vector> Vertizes = new List<Vector>();
+		public List<VoronoiEdge> Edges = new List<VoronoiEdge>();
+		public Dictionary<Vector, VoronoiRegion> Regions;
 	}
+
 	public class VoronoiEdge
 	{
 		public Vector RightData, LeftData;
@@ -22,7 +25,13 @@ namespace BenTools.Mathematics
 			else throw new Exception("Tried to add third vertex!");
 		}
 	}
-	
+
+	public class VoronoiRegion
+	{
+		public List<Vector> Coners = new List<Vector>();
+		public List<VoronoiEdge> Edges = new List<VoronoiEdge>();
+	}
+
 	// VoronoiVertex or VoronoiDataPoint are represented as Vector
 
 	internal abstract class VNode
@@ -224,7 +233,7 @@ namespace BenTools.Mathematics
 			if(a==null || b.Parent==null || c==null || !a.DataPoint.Equals(e.NodeL.DataPoint) || !c.DataPoint.Equals(e.NodeR.DataPoint))
 			{
 				CircleCheckList = new VDataNode[]{};
-				return Root; // Abbruch da sich der Graph verändert hat
+				return Root; // Abbruch da sich der Graph ver?dert hat
 			}
 			eu = (VEdgeNode)b.Parent;
 			CircleCheckList = new VDataNode[] {a,c};
@@ -516,6 +525,50 @@ namespace BenTools.Mathematics
 					}
 				}
 			}
+
+			VG.Regions = new Dictionary<Vector, VoronoiRegion>();
+
+			foreach (VoronoiEdge e in VG.Edges)
+			{
+				if (e.VVertexA == VVUnkown || e.VVertexB == VVUnkown)
+				{
+					continue;
+				}
+
+				for (int i = 0; i < 2; ++i)
+				{
+					VoronoiRegion r;
+					Vector key = i == 0 ? e.LeftData : e.RightData;
+					bool exist = VG.Regions.TryGetValue(key, out r);
+
+					if (exist)
+					{
+					}
+					else
+					{
+						r = new VoronoiRegion();
+					}
+					if (r.Coners.IndexOf(e.VVertexA) == -1)
+					{
+						r.Coners.Add(e.VVertexA);
+					}
+					if (r.Coners.IndexOf(e.VVertexB) == -1)
+					{
+						r.Coners.Add(e.VVertexB);
+					}
+					
+					r.Edges.Add(e);
+
+					if (exist)
+					{
+					}
+					else
+					{
+						VG.Regions.Add(key, r);
+					}
+				}
+			}
+		
 			return VG;
 		}
 	}
