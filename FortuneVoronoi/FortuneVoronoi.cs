@@ -6,12 +6,11 @@ namespace BenTools.Mathematics
 {
 	public class VoronoiGraph
 	{
-		public HashSet<Vector> Vertizes = new HashSet<Vector>();
-		public HashSet<VoronoiEdge> Edges = new HashSet<VoronoiEdge>();
+		public HashSet Vertizes = new HashSet();
+		public HashSet Edges = new HashSet();
 	}
 	public class VoronoiEdge
 	{
-		internal bool Done = false;
 		public Vector RightData, LeftData;
 		public Vector VVertexA = Fortune.VVUnkown, VVertexB = Fortune.VVUnkown;
 		public void AddVertex(Vector V)
@@ -21,53 +20,6 @@ namespace BenTools.Mathematics
 			else if(VVertexB==Fortune.VVUnkown)
 				VVertexB = V;
 			else throw new Exception("Tried to add third vertex!");
-		}
-		public bool IsInfinite
-		{
-			get {return VVertexA == Fortune.VVInfinite && VVertexB == Fortune.VVInfinite;}
-		}
-		public bool IsPartlyInfinite
-		{
-			get {return VVertexA == Fortune.VVInfinite || VVertexB == Fortune.VVInfinite;}
-		}
-		public Vector FixedPoint
-		{
-			get
-			{
-				if(IsInfinite)
-					return 0.5 * (LeftData+RightData);
-				if(VVertexA!=Fortune.VVInfinite)
-					return VVertexA;
-				return VVertexB;
-			}
-		}
-		public Vector DirectionVector
-		{
-			get
-			{
-				if(!IsPartlyInfinite)
-					return (VVertexB-VVertexA)*(1.0/Math.Sqrt(Vector.Dist(VVertexA,VVertexB)));
-				if(LeftData[0]==RightData[0])
-				{
-					if(LeftData[1]<RightData[1])
-						return new Vector(-1,0);
-					return new Vector(1,0);
-				}
-				Vector Erg = new Vector(-(RightData[1]-LeftData[1])/(RightData[0]-LeftData[0]),1);
-				if(RightData[0]<LeftData[0])
-					Erg.Multiply(-1);
-				Erg.Multiply(1.0/Math.Sqrt(Erg.SquaredLength));
-				return Erg;
-			}
-		}
-		public double Length
-		{
-			get
-			{
-				if(IsPartlyInfinite)
-					return double.PositiveInfinity;
-				return Math.Sqrt(Vector.Dist(VVertexA,VVertexB));
-			}
 		}
 	}
 	
@@ -301,22 +253,7 @@ namespace BenTools.Mathematics
 //			if(eo==eu)
 //				return Root;
 //			/////////////////////
-			
-			//complete & cleanup eo
 			eo.Edge.AddVertex(VNew);
-			//while(eo.Edge.VVertexB == Fortune.VVUnkown)
-			//{
-			//    eo.Flipped = !eo.Flipped;
-			//    eo.Edge.AddVertex(Fortune.VVInfinite);
-			//}
-			//if(eo.Flipped)
-			//{
-			//    Vector T = eo.Edge.LeftData;
-			//    eo.Edge.LeftData = eo.Edge.RightData;
-			//    eo.Edge.RightData = T;
-			//}
-
-
 			//2. Replace eo by new Edge
 			VoronoiEdge VE = new VoronoiEdge();
 			VE.LeftData = a.DataPoint;
@@ -347,30 +284,9 @@ namespace BenTools.Mathematics
 			VC.NodeR = r;
 			VC.Center = Center;
 			VC.Valid = true;
-			if(VC.Y>ys || Math.Abs(VC.Y - ys) < 1e-10)
+			if(VC.Y>=ys)
 				return VC;
 			return null;
-		}
-
-		public static void CleanUpTree(VNode Root)
-		{
-			if(Root is VDataNode)
-				return;
-			VEdgeNode VE = Root as VEdgeNode;
-			while(VE.Edge.VVertexB == Fortune.VVUnkown)
-			{
-				VE.Edge.AddVertex(Fortune.VVInfinite);
-//				VE.Flipped = !VE.Flipped;
-			}
-			if(VE.Flipped)
-			{
-				Vector T = VE.Edge.LeftData;
-				VE.Edge.LeftData = VE.Edge.RightData;
-				VE.Edge.RightData = T;
-			}
-			VE.Edge.Done = true;
-			CleanUpTree(Root.Left);
-			CleanUpTree(Root.Right);
 		}
 	}
 
@@ -600,58 +516,7 @@ namespace BenTools.Mathematics
 					}
 				}
 			}
-			VNode.CleanUpTree(RootNode);
-			foreach(VoronoiEdge VE in VG.Edges)
-			{
-				if(VE.Done)
-					continue;
-				if(VE.VVertexB == Fortune.VVUnkown)
-				{
-					VE.AddVertex(Fortune.VVInfinite);
-					if(Math.Abs(VE.LeftData[1]-VE.RightData[1])<1e-10 && VE.LeftData[0]<VE.RightData[0])
-					{
-						Vector T = VE.LeftData;
-						VE.LeftData = VE.RightData;
-						VE.RightData = T;
-					}
-				}
-			}
-			
-			ArrayList MinuteEdges = new ArrayList();
-			foreach(VoronoiEdge VE in VG.Edges)
-			{
-				if(!VE.IsPartlyInfinite && VE.VVertexA.Equals(VE.VVertexB))
-				{
-					MinuteEdges.Add(VE);
-					// prevent rounding errors from expanding to holes
-					foreach(VoronoiEdge VE2 in VG.Edges)
-					{
-						if(VE2.VVertexA.Equals(VE.VVertexA))
-							VE2.VVertexA = VE.VVertexA;
-						if(VE2.VVertexB.Equals(VE.VVertexA))
-							VE2.VVertexB = VE.VVertexA;
-					}
-				}
-			}
-			foreach(VoronoiEdge VE in MinuteEdges)
-				VG.Edges.Remove(VE);
-
 			return VG;
-		}
-		public static VoronoiGraph FilterVG(VoronoiGraph VG, double minLeftRightDist)
-		{
-			VoronoiGraph VGErg = new VoronoiGraph();
-			foreach(VoronoiEdge VE in VG.Edges)
-			{
-				if(Math.Sqrt(Vector.Dist(VE.LeftData,VE.RightData))>=minLeftRightDist)
-					VGErg.Edges.Add(VE);
-			}
-			foreach(VoronoiEdge VE in VGErg.Edges)
-			{
-				VGErg.Vertizes.Add(VE.VVertexA);
-				VGErg.Vertizes.Add(VE.VVertexB);
-			}
-			return VGErg;
 		}
 	}
 }

@@ -1,118 +1,68 @@
 using System;
-using System.Collections.Generic;
+using System.Collections;
 
 namespace BenTools.Data
 {
 	/// <summary>
-	/// Set für effizienten Zugriff auf Objekte. Objete werden als Key abgelegt, value ist nur ein dummy-Objekt.
+	/// Summary description for Hashset.
 	/// </summary>
-	[Serializable]
-	public class HashSet<T> : IEnumerable<T>, ICollection<T>
+	public class HashSet : IEnumerable, ICollection
 	{
-		Dictionary<T, object> Core;
-		static readonly object Dummy = new object();
-
-		public HashSet(IEnumerable<T> source)
-			: this()
+		Hashtable H = new Hashtable();
+		object Dummy = new object();
+		public HashSet(){}
+		public void Add(object O)
 		{
-			AddRange(source);
+			H[O] = Dummy;
 		}
-
-		public HashSet(IEqualityComparer<T> eqComp)
+		public void AddRange(IEnumerable List)
 		{
-			Core = new Dictionary<T, object>(eqComp);
-		}
-		public HashSet()
-		{
-			Core = new Dictionary<T, object>();
-		}
-
-		public bool Add(T o)
-		{
-			int count = Core.Count;
-			Core[o] = Dummy;
-			if (count == Core.Count)
-				return false;
-			else 
-				return true;
-		}
-
-		public bool Contains(T o)
-		{
-			return Core.ContainsKey(o);
-		}
-
-		public bool Remove(T o)
-		{
-			return Core.Remove(o);
-		}
-
-		[Obsolete]
-		public void AddRange(System.Collections.IEnumerable List)
-		{
-			foreach(T O in List)
+			foreach(object O in List)
 				Add(O);
 		}
-
-		public void AddRange(IEnumerable<T> List)
+		public void Remove(object O)
 		{
-			foreach(T O in List)
-				Add(O);
+			H.Remove(O);
 		}
-
+		public bool Contains(object O)
+		{
+			return H.ContainsKey(O);
+		}
 		public void Clear()
 		{
-			Core.Clear();
+			H.Clear();
 		}
-
-		#region IEnumerable<T> Members
-
-		public IEnumerator<T> GetEnumerator()
+		public IEnumerator GetEnumerator()
 		{
-			return Core.Keys.GetEnumerator();
+			return H.Keys.GetEnumerator();
 		}
-
-		#endregion
-
-		#region ICollection<T> Members
+		public int Count
+		{
+			get
+			{
+				return H.Count;
+			}
+		}
 
 		public bool IsSynchronized
 		{
 			get
 			{
-				return false;
+				return H.IsSynchronized;
 			}
 		}
 
-		public int Count
+		public void CopyTo(Array array, int index)
+		{
+			H.Keys.CopyTo(array,index);
+		}
+
+		public object SyncRoot
 		{
 			get
 			{
-				
-				return Core.Count;
+				return H.SyncRoot;
 			}
-		}
-
-		public void CopyTo(T[] array, int index)
-		{
-			Core.Keys.CopyTo(array,index);
-		}
-
-		public bool IsReadOnly
-		{
-			get { return false; }
-		}
-		#endregion
-
-
-		void ICollection<T>.Add(T item)
-		{
-			Add(item);
-		}
-
-		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{
-			return Core.Keys.GetEnumerator();
 		}
 	}
 }

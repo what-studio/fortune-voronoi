@@ -73,6 +73,22 @@ namespace BenTools.Mathematics
 		/// <summary>
 		/// The dimension of the vector
 		/// </summary>
+		public double X
+		{
+			get
+			{
+				return data[0];
+			}
+		}
+
+		public double Y
+		{
+			get
+			{
+				return data[1];
+			}
+		}
+
 		public int Dim
 		{
 			get
